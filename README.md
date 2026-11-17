@@ -7,8 +7,8 @@ This repository contains scripts to build the dependencies required for DuckStat
 - Windows x64
 - Windows ARM64
 - Linux x64
-- Linux ARM64
-- Linux ARM32/ARMHF
+- Linux ARM64 (native and cross-compiled)
+- Linux ARM32/ARMHF (cross-compiled)
 - MacOS x64
 - MacOS ARM64
 

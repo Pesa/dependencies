@@ -191,13 +191,21 @@ jobs:
         compression-level: 0
         if-no-files-found: error
 
-  build-linux-x64:
-    name: "🐧 Linux x64"
+  build-linux:
+    name: "🐧 Linux ${{ matrix.arch }}"
     needs: build-sources
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 240
     env:
       SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-22.04
+          - arch: arm64
+            runner: ubuntu-22.04-arm
     steps:
     - uses: actions/checkout@v6
 
@@ -214,25 +222,25 @@ jobs:
       run: ./install-packages-linux.sh
 
     - name: Build Dependencies
-      run: ./build-dependencies-linux.sh -skip-download linux-x64
+      run: ./build-dependencies-linux.sh -skip-download "linux-${{ matrix.arch }}"
 
     - name: Build FFmpeg
-      run: ./build-ffmpeg-linux.sh linux-x64
+      run: ./build-ffmpeg-linux.sh "linux-${{ matrix.arch }}"
 
     - name: Create Archive
-      run: tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cJf deps-linux-x64.tar.xz linux-x64
+      run: tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cJf "deps-linux-${{ matrix.arch }}.tar.xz" "linux-${{ matrix.arch }}"
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v6
       with:
-        name: deps-linux-x64
-        path: deps-linux-x64.tar.xz
+        name: deps-linux-${{ matrix.arch }}
+        path: deps-linux-${{ matrix.arch }}.tar.xz
         compression-level: 0
         if-no-files-found: error
 
   build-linux-cross:
     name: "🐧 Linux ${{ matrix.arch }}"
-    needs: [build-sources, build-linux-x64]
+    needs: [build-sources, build-linux]
     runs-on: ubuntu-22.04
     container:
       image: ghcr.io/duckstation/cross-build-${{ matrix.arch }}:latest
@@ -283,7 +291,7 @@ jobs:
   create-release:
     name: "📤 Create Release"
     if: github.ref == 'refs/heads/master'
-    needs: [build-windows-source, build-windows-installer, build-macos, build-linux-x64, build-linux-cross, build-sources]
+    needs: [build-windows-source, build-windows-installer, build-macos, build-linux, build-linux-cross, build-sources]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
@@ -312,6 +320,7 @@ jobs:
           artifacts/deps-windows-qt-installer/deps-windows-qt-installer-arm64.7z \
           artifacts/deps-macos-universal/deps-macos-universal.tar.xz \
           artifacts/deps-linux-x64/deps-linux-x64.tar.xz \
+          artifacts/deps-linux-arm64/deps-linux-arm64.tar.xz \
           artifacts/deps-linux-cross-arm64/deps-linux-cross-arm64.tar.xz \
           artifacts/deps-linux-cross-armhf/deps-linux-cross-armhf.tar.xz \
           artifacts/deps-sources/deps-sources.zip
