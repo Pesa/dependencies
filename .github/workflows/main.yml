@@ -41,10 +41,10 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
       with:
-        name: deps-sources
         path: deps-sources.zip
-        compression-level: 0
+        archive: false
         if-no-files-found: error
+        retention-days: 7
 
   build-windows-source:
     name: "💻 Windows (Qt Source)"
@@ -59,13 +59,13 @@ jobs:
     - name: Download Sources
       uses: actions/download-artifact@v8
       with:
-        name: deps-sources
-        path: ./deps-sources
+        name: deps-sources.zip
+        skip-decompress: true
 
     - name: Extract Sources
       shell: cmd
       run: |
-        "C:\Program Files\7-Zip\7z.exe" x deps-sources/deps-sources.zip
+        "C:\Program Files\7-Zip\7z.exe" x deps-sources.zip
 
     - name: Build x64 Dependencies
       run: .\build-dependencies-windows.bat x64 -skip-download -skip-cleanup
@@ -87,15 +87,21 @@ jobs:
         "C:\Program Files\7-Zip\7z.exe" a -r deps-windows-x64.7z windows-x64
         "C:\Program Files\7-Zip\7z.exe" a -r deps-windows-arm64.7z windows-arm64
 
-    - name: Upload Artifacts
+    - name: Upload x64 Artifact
       uses: actions/upload-artifact@v7
       with:
-        name: deps-windows
-        path: |
-          deps-windows-x64.7z
-          deps-windows-arm64.7z
-        compression-level: 0
+        path: deps-windows-x64.7z
+        archive: false
         if-no-files-found: error
+        retention-days: 7
+
+    - name: Upload ARM64 Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        path: deps-windows-arm64.7z
+        archive: false
+        if-no-files-found: error
+        retention-days: 7
 
   build-windows-installer:
     name: "💻 Windows (Qt Installer)"
@@ -110,13 +116,13 @@ jobs:
     - name: Download Sources
       uses: actions/download-artifact@v8
       with:
-        name: deps-sources
-        path: ./deps-sources
+        name: deps-sources.zip
+        skip-decompress: true
 
     - name: Extract Sources
       shell: cmd
       run: |
-        "C:\Program Files\7-Zip\7z.exe" x deps-sources/deps-sources.zip
+        "C:\Program Files\7-Zip\7z.exe" x deps-sources.zip
 
     - name: Build x64 Dependencies
       env:
@@ -144,15 +150,21 @@ jobs:
         "C:\Program Files\7-Zip\7z.exe" a -r deps-windows-qt-installer-x64.7z windows-x64
         "C:\Program Files\7-Zip\7z.exe" a -r deps-windows-qt-installer-arm64.7z windows-arm64
 
-    - name: Upload Artifacts
+    - name: Upload x64 Artifact
       uses: actions/upload-artifact@v7
       with:
-        name: deps-windows-qt-installer
-        path: |
-          deps-windows-qt-installer-x64.7z
-          deps-windows-qt-installer-arm64.7z
-        compression-level: 0
+        path: deps-windows-qt-installer-x64.7z
+        archive: false
         if-no-files-found: error
+        retention-days: 7
+
+    - name: Upload ARM64 Artifact
+      uses: actions/upload-artifact@v7
+      with:
+        path: deps-windows-qt-installer-arm64.7z
+        archive: false
+        if-no-files-found: error
+        retention-days: 7
 
   build-macos:
     name: "🍎 MacOS"
@@ -167,11 +179,11 @@ jobs:
     - name: Download Sources
       uses: actions/download-artifact@v8
       with:
-        name: deps-sources
-        path: ./deps-sources
+        name: deps-sources.zip
+        skip-decompress: true
 
     - name: Extract Sources
-      run: unzip deps-sources/deps-sources.zip
+      run: unzip deps-sources.zip
 
     - name: Use Xcode 26.5
       run: sudo xcode-select -s /Applications/Xcode_26.5.app
@@ -186,10 +198,10 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
       with:
-        name: deps-macos-universal
         path: deps-macos-universal.tar.xz
-        compression-level: 0
+        archive: false
         if-no-files-found: error
+        retention-days: 7
 
   build-linux:
     name: "🐧 Linux ${{ matrix.arch }}"
@@ -212,11 +224,11 @@ jobs:
     - name: Download Sources
       uses: actions/download-artifact@v8
       with:
-        name: deps-sources
-        path: ./deps-sources
+        name: deps-sources.zip
+        skip-decompress: true
 
     - name: Extract Sources
-      run: unzip deps-sources/deps-sources.zip
+      run: unzip deps-sources.zip
 
     - name: Install Packages
       run: ./install-packages-linux.sh
@@ -233,10 +245,10 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
       with:
-        name: deps-linux-${{ matrix.arch }}
         path: deps-linux-${{ matrix.arch }}.tar.xz
-        compression-level: 0
+        archive: false
         if-no-files-found: error
+        retention-days: 7
 
   build-linux-cross:
     name: "🐧 Linux ${{ matrix.arch }}"
@@ -257,21 +269,20 @@ jobs:
     - name: Download Sources
       uses: actions/download-artifact@v8
       with:
-        name: deps-sources
-        path: ./deps-sources
+        name: deps-sources.zip
+        skip-decompress: true
 
     - name: Extract Sources
-      run: unzip deps-sources/deps-sources.zip
+      run: unzip deps-sources.zip
 
     - name: Download x64 Artifact
       uses: actions/download-artifact@v8
       with:
-        name: deps-linux-x64
-        path: ./deps-linux-x64
+        name: deps-linux-x64.tar.xz
+        skip-decompress: true
 
     - name: Extract x64 Artifact
-      run: |
-        tar -xvf deps-linux-x64/deps-linux-x64.tar.xz
+      run: tar -xvf deps-linux-x64.tar.xz
 
     - name: Build Dependencies
       run: |
@@ -283,10 +294,10 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
       with:
-        name: deps-linux-cross-${{ matrix.arch }}
         path: deps-linux-cross-${{ matrix.arch }}.tar.xz
-        compression-level: 0
+        archive: false
         if-no-files-found: error
+        retention-days: 7
 
   create-release:
     name: "📤 Create Release"
@@ -305,6 +316,8 @@ jobs:
       uses: actions/download-artifact@v8
       with:
         path: artifacts
+        merge-multiple: true
+        skip-decompress: true
 
     - name: Create Release
       env:
@@ -317,13 +330,13 @@ jobs:
           --target "$GITHUB_SHA" \
           --title "$TAG" \
           --notes "Dependencies built on $(date +'%Y-%m-%d') from commit $GITHUB_SHA." \
-          artifacts/deps-windows/deps-windows-x64.7z \
-          artifacts/deps-windows/deps-windows-arm64.7z \
-          artifacts/deps-windows-qt-installer/deps-windows-qt-installer-x64.7z \
-          artifacts/deps-windows-qt-installer/deps-windows-qt-installer-arm64.7z \
-          artifacts/deps-macos-universal/deps-macos-universal.tar.xz \
-          artifacts/deps-linux-x64/deps-linux-x64.tar.xz \
-          artifacts/deps-linux-arm64/deps-linux-arm64.tar.xz \
-          artifacts/deps-linux-cross-arm64/deps-linux-cross-arm64.tar.xz \
-          artifacts/deps-linux-cross-armhf/deps-linux-cross-armhf.tar.xz \
-          artifacts/deps-sources/deps-sources.zip
+          artifacts/deps-windows-x64.7z \
+          artifacts/deps-windows-arm64.7z \
+          artifacts/deps-windows-qt-installer-x64.7z \
+          artifacts/deps-windows-qt-installer-arm64.7z \
+          artifacts/deps-macos-universal.tar.xz \
+          artifacts/deps-linux-x64.tar.xz \
+          artifacts/deps-linux-arm64.tar.xz \
+          artifacts/deps-linux-cross-arm64.tar.xz \
+          artifacts/deps-linux-cross-armhf.tar.xz \
+          artifacts/deps-sources.zip
