@@ -10,7 +10,7 @@ on:
       - '**.txt'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-sources:
@@ -20,7 +20,7 @@ jobs:
     outputs:
       source-date-epoch: ${{ steps.epoch.outputs.epoch }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     # Timestamps in the binaries and archives are pinned to the commit date, for reproducible builds.
     - name: Get Commit Date
@@ -39,7 +39,7 @@ jobs:
       run: zip -r deps-sources.zip deps-build
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: deps-sources
         path: deps-sources.zip
@@ -54,10 +54,10 @@ jobs:
     env:
       SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Download Sources
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8
       with:
         name: deps-sources
         path: ./deps-sources
@@ -88,7 +88,7 @@ jobs:
         "C:\Program Files\7-Zip\7z.exe" a -r deps-windows-arm64.7z windows-arm64
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: deps-windows
         path: |
@@ -105,10 +105,10 @@ jobs:
     env:
       SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Download Sources
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8
       with:
         name: deps-sources
         path: ./deps-sources
@@ -145,7 +145,7 @@ jobs:
         "C:\Program Files\7-Zip\7z.exe" a -r deps-windows-qt-installer-arm64.7z windows-arm64
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: deps-windows-qt-installer
         path: |
@@ -162,10 +162,10 @@ jobs:
     env:
       SOURCE_DATE_EPOCH: ${{ needs.build-sources.outputs.source-date-epoch }}
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Download Sources
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8
       with:
         name: deps-sources
         path: ./deps-sources
@@ -184,7 +184,7 @@ jobs:
       run: gtar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cJf deps-macos-universal.tar.xz macos-universal
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: deps-macos-universal
         path: deps-macos-universal.tar.xz
@@ -207,10 +207,10 @@ jobs:
           - arch: arm64
             runner: ubuntu-22.04-arm
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Download Sources
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8
       with:
         name: deps-sources
         path: ./deps-sources
@@ -231,7 +231,7 @@ jobs:
       run: tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cJf "deps-linux-${{ matrix.arch }}.tar.xz" "linux-${{ matrix.arch }}"
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: deps-linux-${{ matrix.arch }}
         path: deps-linux-${{ matrix.arch }}.tar.xz
@@ -252,10 +252,10 @@ jobs:
       matrix:
         arch: ["arm64", "armhf"]
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Download Sources
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8
       with:
         name: deps-sources
         path: ./deps-sources
@@ -264,7 +264,7 @@ jobs:
       run: unzip deps-sources/deps-sources.zip
 
     - name: Download x64 Artifact
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8
       with:
         name: deps-linux-x64
         path: ./deps-linux-x64
@@ -275,13 +275,13 @@ jobs:
 
     - name: Build Dependencies
       run: |
-        ./build-dependencies-linux-cross.sh -skip-download "linux-x64" "${{ matrix.arch }}" "/${{ matrix.arch }}-chroot" "linux-cross-${{matrix.arch}}"
+        ./build-dependencies-linux-cross.sh -skip-download "linux-x64" "${{ matrix.arch }}" "/${{ matrix.arch }}-chroot" "linux-cross-${{ matrix.arch }}"
 
     - name: Create Archive
-      run: tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cJf "deps-linux-cross-${{ matrix.arch }}.tar.xz" "linux-cross-${{matrix.arch}}"
+      run: tar --sort=name --mtime="@$SOURCE_DATE_EPOCH" --owner=0 --group=0 --numeric-owner -cJf "deps-linux-cross-${{ matrix.arch }}.tar.xz" "linux-cross-${{ matrix.arch }}"
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: deps-linux-cross-${{ matrix.arch }}
         path: deps-linux-cross-${{ matrix.arch }}.tar.xz
@@ -293,27 +293,30 @@ jobs:
     if: github.ref == 'refs/heads/master'
     needs: [build-windows-source, build-windows-installer, build-macos, build-linux, build-linux-cross, build-sources]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
     steps:
-    - uses: actions/checkout@v6
-
     - name: Get Current Date
       id: date
       run: echo "date=$(date +'%Y%m%d')" >> "$GITHUB_OUTPUT"
 
     - name: Download All Artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v8
       with:
         path: artifacts
 
     - name: Create Release
       env:
+        GH_REPO: ${{ github.repository }}
         GH_TOKEN: ${{ github.token }}
+        TAG: release-${{ steps.date.outputs.date }}
       run: |
-        TAG="release-${{ steps.date.outputs.date }}"
         gh release delete "$TAG" --yes --cleanup-tag || true
         gh release create "$TAG" \
+          --target "$GITHUB_SHA" \
           --title "$TAG" \
-          --notes "Dependencies built on $(date +'%Y-%m-%d') from commit ${{ github.sha }}." \
+          --notes "Dependencies built on $(date +'%Y-%m-%d') from commit $GITHUB_SHA." \
           artifacts/deps-windows/deps-windows-x64.7z \
           artifacts/deps-windows/deps-windows-arm64.7z \
           artifacts/deps-windows-qt-installer/deps-windows-qt-installer-x64.7z \
