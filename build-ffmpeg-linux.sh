@@ -39,36 +39,40 @@ echo "FFmpeg dependencies directory is $DEPSINSTALLDIR"
 source "$SCRIPTDIR/versions"
 
 LAME=3.100
-LIBVPX=1.15.2
+LIBVPX=1.17.0
 FDK_AAC=0fc0e0e0b89de3becd5f099eae725f13eeecc0d1
-LIBAOM_TAG=v3.14.1
-LIBAOM_SHA=03087864cf4bea6abb0d28f95cf7843511413d8f
-LIBOGG=1.3.5
+LIBAOM_TAG=v3.15.3
+LIBAOM_SHA=b141d9c45db236335351c8a4b2a14b3ade27c937
+LIBOGG=1.3.6
 LIBVORBIS=1.3.7
-LIBTHEORA=1.1.1
+LIBTHEORA=1.2.0
 FLAC=1.5.0
-SPEEX=1.2.0
-AMF=1.5.2
-OPUS=1.5.2
+SPEEX=1.2.1
+AMF=1.5.3
+OPUS=1.6.1
 SVT_AV1=3.1.2
 SHADERC=2026.3
 SPIRV_HEADERS=vulkan-sdk-1.4.357.0
 VULKAN_HEADERS=1.4.329
-OPENH264=2.6.0
+OPENH264=2.7.0
 OPENH264_ABI=8
 
 case "$(uname -m)" in
   x86_64|amd64)
     OPENH264_PLATFORM=linux64
+    OPENH264_BZ2_HASH=44ad0dd2c5af2bac84d26f89f2eb4e268708b8739323d15d33837f7221ce4980
     ;;
   i?86)
     OPENH264_PLATFORM=linux32
+    OPENH264_BZ2_HASH=53daed2d121f41d2df7ff58f97931de3f77433ee7db956ecdb2b42449ef78408
     ;;
   arm|armv7l|armv8l)
     OPENH264_PLATFORM=linux-arm
+    OPENH264_BZ2_HASH=7091b10b4c07cc42a480c5a72e23c9442ae5a96b8adb661c5a40d40268680242
     ;;
   aarch64|arm64)
     OPENH264_PLATFORM=linux-arm64
+    OPENH264_BZ2_HASH=74c7a1d02003d80daf2b4bc7bbb02f73e5548debd4c158b495e1f83d80ebd136
     ;;
   *)
     echo "No official Cisco OpenH264 binary is available for architecture $(uname -m)." >&2
@@ -145,14 +149,14 @@ if [ "$SKIP_DOWNLOAD" != true ]; then
       exit 1
     fi
   fi
-  if [ ! -f "libogg-$LIBOGG.tar.gz" ]; then
-    curl -C - -L -O "https://downloads.xiph.org/releases/ogg/libogg-$LIBOGG.tar.gz"
+  if [ ! -f "libogg-$LIBOGG.tar.xz" ]; then
+    curl -C - -L -O "https://downloads.xiph.org/releases/ogg/libogg-$LIBOGG.tar.xz"
   fi
-  if [ ! -f "libvorbis-$LIBVORBIS.tar.gz" ]; then
-    curl -C - -L -O "https://github.com/xiph/vorbis/releases/download/v$LIBVORBIS/libvorbis-$LIBVORBIS.tar.gz"
+  if [ ! -f "libvorbis-$LIBVORBIS.tar.xz" ]; then
+    curl -C - -L -O "https://downloads.xiph.org/releases/vorbis/libvorbis-$LIBVORBIS.tar.xz"
   fi
-  if [ ! -f "libtheora-$LIBTHEORA.tar.bz2" ]; then
-    curl -C - -L -O "https://downloads.xiph.org/releases/theora/libtheora-$LIBTHEORA.tar.bz2"
+  if [ ! -f "libtheora-$LIBTHEORA.tar.xz" ]; then
+    curl -C - -L -O "https://downloads.xiph.org/releases/theora/libtheora-$LIBTHEORA.tar.xz"
   fi
   if [ ! -f "flac-$FLAC.tar.xz" ]; then
     curl -C - -L -O "https://downloads.xiph.org/releases/flac/flac-$FLAC.tar.xz"
@@ -193,21 +197,21 @@ fi
 
 cat > SHASUMS <<EOF
 $FFMPEG_XZ_HASH  ffmpeg-$FFMPEG_VERSION.tar.xz
-d3c12eb324edf05e214608b6a395a51dd95770ed9d45520185d6c3a206811c99  AMF-headers-v$AMF.tar.gz
+0f521ad98041f8001147cded4a660127f18b1c27a801a5cd691bda1fa48381be  AMF-headers-v$AMF.tar.gz
 7322744f239a0d8460fde84e92cca77f2fe9d7e25a213789659df9e86b696b42  fdk-aac-stripped-$FDK_AAC.tar.gz
 f2c1c76592a82ffff8413ba3c4a1299b6c7ab06c734dee03fd88630485c2b920  flac-$FLAC.tar.xz
 ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e  lame-$LAME.tar.gz
-0eb4b4b9420a0f51db142ba3f9c64b333f826532dc0f48c6410ae51f4799b664  libogg-$LIBOGG.tar.gz
-b6ae1ee2fa3d42ac489287d3ec34c5885730b1296f0801ae577a35193d3affbc  libtheora-$LIBTHEORA.tar.bz2
-0e982409a9c3fc82ee06e08205b1355e5c6aa4c36bca58146ef399621b0ce5ab  libvorbis-$LIBVORBIS.tar.gz
-b6ae1ee2fa3d42ac489287d3ec34c5885730b1296f0801ae577a35193d3affbc  libtheora-$LIBTHEORA.tar.bz2
-26fcd3db88045dee380e581862a6ef106f49b74b6396ee95c2993a260b4636aa  libvpx-$LIBVPX.tar.gz
-65c1d2f78b9f2fb20082c38cbe47c951ad5839345876e46941612ee87f9a7ce1  opus-$OPUS.tar.gz
-eaae8af0ac742dc7d542c9439ac72f1f385ce838392dc849cae4536af9210094  speex-$SPEEX.tar.gz
+5c8253428e181840cd20d41f3ca16557a9cc04bad4a3d04cce84808677fa1061  libogg-$LIBOGG.tar.xz
+ebdf77a8f5c0a8f7a9e42323844fa09502b34eb1d1fece7b5f54da41fe2122ec  libtheora-$LIBTHEORA.tar.xz
+b33cc4934322bcbf6efcbacf49e3ca01aadbea4114ec9589d1b1e9d20f72954b  libvorbis-$LIBVORBIS.tar.xz
+1020f184046187baa2985dbde38e0691f49c44088bca7a1842b0236c6081dc0a  libvpx-$LIBVPX.tar.gz
+6ffcb593207be92584df15b32466ed64bbec99109f007c82205f0194572411a1  opus-$OPUS.tar.gz
+4b44d4f2b38a370a2d98a78329fefc56a0cf93d1c1be70029217baae6628feea  speex-$SPEEX.tar.gz
 084720e7818cec7cb38d31ab478478b910d643fe5b13fc2cfcbd9da9c9d5c84b  SVT-AV1-$SVT_AV1.tar.gz
 ee493ccf1b3038b4ef2fe024664c5eb2dc4bcc1f6b05b33e3909de0e19c81024  shaderc-$SHADERC.tar.gz
 4d703067a7e06331ccb37bdfed3f9b7879cc61969a2689ae95c95db34a47ff07  SPIRV-Headers-$SPIRV_HEADERS.tar.gz
 7ea67aabccdecc6ef616b4c243f563ac9bca945a63d4f4cca21f1bbcd828b18e  Vulkan-Headers-$VULKAN_HEADERS.tar.gz
+$OPENH264_BZ2_HASH  $OPENH264_BINARY.bz2
 EOF
 
 shasum -a 256 --check SHASUMS
@@ -281,7 +285,7 @@ cd ..
 
 echo "Building libogg..."
 rm -fr "libogg-$LIBOGG"
-tar xf "libogg-$LIBOGG.tar.gz"
+tar xf "libogg-$LIBOGG.tar.xz"
 cd "libogg-$LIBOGG"
 mkdir build-ds
 cd build-ds
@@ -292,7 +296,7 @@ cd ../..
 
 echo "Building libvorbis..."
 rm -fr "libvorbis-$LIBVORBIS"
-tar xf "libvorbis-$LIBVORBIS.tar.gz"
+tar xf "libvorbis-$LIBVORBIS.tar.xz"
 cd "libvorbis-$LIBVORBIS"
 mkdir build-ds
 cd build-ds
@@ -303,11 +307,11 @@ cd ../..
 
 echo "Building libtheora..."
 rm -fr "libtheora-$LIBTHEORA"
-tar xf "libtheora-$LIBTHEORA.tar.bz2"
+tar xf "libtheora-$LIBTHEORA.tar.xz"
 cd "libtheora-$LIBTHEORA"
 mkdir build-ds
 cd build-ds
-../configure --prefix="$DEPSINSTALLDIR" --enable-static --disable-shared --with-pic --disable-examples --disable-sdltest --disable-vorbistest --disable-oggtest
+../configure --prefix="$DEPSINSTALLDIR" --enable-static --disable-shared --with-pic --disable-examples --disable-oggtest --disable-vorbistest
 make -j "$NPROCS"
 make install
 cd ../..
